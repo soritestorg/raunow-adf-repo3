@@ -1,0 +1,109 @@
+{
+	"name": "pipeline-check-pool-state",
+	"properties": {
+		"activities": [
+			{
+				"name": "GetStatePool",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": {
+						"value": "@concat('https://management.azure.com/subscriptions/',variables('subscriptionId'),'/resourceGroups/',variables('resourceGroupName'),'/providers/Microsoft.Sql/servers/',variables('serverName'),'/databases/',variables('databaseName'),'?api-version=2021-02-01-preview')",
+						"type": "Expression"
+					},
+					"connectVia": {
+						"referenceName": "VN-IR",
+						"type": "IntegrationRuntimeReference"
+					},
+					"method": "GET",
+					"authentication": {
+						"type": "MSI",
+						"resource": "https://management.azure.com"
+					}
+				}
+			},
+			{
+				"name": "CheckIfPaused",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "GetStatePool",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(activity('GetStatePool').output.properties.status,'Paused' )",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "Restart",
+							"type": "WebActivity",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"url": {
+									"value": "@concat('https://management.azure.com/subscriptions/',variables('subscriptionId'),'/resourceGroups/',variables('resourceGroupName'),'/providers/Microsoft.Sql/servers/',variables('serverName'),'/databases/',variables('databaseName'),'/resume?api-version=2021-02-01-preview')",
+									"type": "Expression"
+								},
+								"connectVia": {
+									"referenceName": "VN-IR",
+									"type": "IntegrationRuntimeReference"
+								},
+								"method": "POST",
+								"body": {
+									"value": "@json('{}')",
+									"type": "Expression"
+								},
+								"authentication": {
+									"type": "MSI",
+									"resource": "https://management.azure.com"
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"variables": {
+			"subscriptionId": {
+				"type": "String",
+				"defaultValue": "16b7a23f-1995-469b-9487-2fbe380f8ffa"
+			},
+			"resourceGroupName": {
+				"type": "String",
+				"defaultValue": "lwl-synapse-test-rg"
+			},
+			"serverName": {
+				"type": "String",
+				"defaultValue": "lwlsrvtest"
+			},
+			"databaseName": {
+				"type": "String",
+				"defaultValue": "lwlpool"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-11-03T11:06:08Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

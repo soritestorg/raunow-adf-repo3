@@ -1,0 +1,101 @@
+{
+	"name": "pipeline-mi-scaling",
+	"properties": {
+		"activities": [
+			{
+				"name": "Scale Up",
+				"type": "Script",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "ls_az_mi",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": "ALTER DATABASE lwlpool\nMODIFY (SERVICE_OBJECTIVE = 'DW200c');"
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
+				}
+			},
+			{
+				"name": "Wait for Scaling",
+				"type": "Wait",
+				"dependsOn": [
+					{
+						"activity": "Scale Up",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"waitTimeInSeconds": 360
+				}
+			},
+			{
+				"name": "Scale Down",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "Wait for Scaling",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "ls_az_mi",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": "ALTER DATABASE lwlpool\nMODIFY (SERVICE_OBJECTIVE = 'DW100c');"
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
+				}
+			},
+			{
+				"name": "Wait for Scaling Down",
+				"type": "Wait",
+				"dependsOn": [
+					{
+						"activity": "Scale Down",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"waitTimeInSeconds": 300
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2022-10-31T14:04:39Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

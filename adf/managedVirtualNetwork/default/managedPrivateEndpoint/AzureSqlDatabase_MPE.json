@@ -1,0 +1,10 @@
+{
+	"name": "AzureSqlDatabase_MPE",
+	"properties": {
+		"privateLinkResourceId": "/subscriptions/16b7a23f-1995-469b-9487-2fbe380f8ffa/resourceGroups/lwl-synapse-test-rg/providers/Microsoft.Sql/servers/lwlsrvtest",
+		"groupId": "sqlServer",
+		"fqdns": [
+			"lwlsrvtest.database.windows.net"
+		]
+	}
+}

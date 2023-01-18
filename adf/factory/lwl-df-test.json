@@ -1,0 +1,9 @@
+{
+	"name": "lwl-df-test",
+	"location": "westeurope",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "f9c971a7-17fb-4891-b20c-2b53158ea0e3",
+		"tenantId": "bb57d854-06b0-4e01-84e9-d931a02b4851"
+	}
+}

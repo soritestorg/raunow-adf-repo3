@@ -1,0 +1,25 @@
+{
+	"name": "pipeline-scale-500",
+	"properties": {
+		"activities": [
+			{
+				"name": "Set scale to 500",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "var500",
+					"value": "scale to 500"
+				}
+			}
+		],
+		"variables": {
+			"var500": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-11-02T09:32:25Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

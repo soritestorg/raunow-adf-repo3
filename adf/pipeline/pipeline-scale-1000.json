@@ -1,0 +1,25 @@
+{
+	"name": "pipeline-scale-1000",
+	"properties": {
+		"activities": [
+			{
+				"name": "Set scale to 1000",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "var1",
+					"value": "scale to 1000"
+				}
+			}
+		],
+		"variables": {
+			"var1": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-11-02T08:30:03Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

@@ -1,0 +1,15 @@
+{
+	"name": "ls_az_mi",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"connectionString": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=lwlsrvtest.database.windows.net;Initial Catalog=master"
+		},
+		"connectVia": {
+			"referenceName": "VN-IR",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

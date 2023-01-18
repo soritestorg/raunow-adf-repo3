@@ -1,0 +1,103 @@
+{
+	"name": "pipeline-test-scaling",
+	"properties": {
+		"activities": [
+			{
+				"name": "Scale Up",
+				"description": "Scaling up sql pool to DW200c.",
+				"type": "Script",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "azsqlconn",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": "ALTER DATABASE lwlpool\nMODIFY (SERVICE_OBJECTIVE = 'DW200c');"
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
+				}
+			},
+			{
+				"name": "Wait for scaling up",
+				"type": "Wait",
+				"dependsOn": [
+					{
+						"activity": "Scale Up",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"waitTimeInSeconds": 360
+				}
+			},
+			{
+				"name": "Scale Down",
+				"description": "Scaling down sql pool to DW100c.",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "Wait for scaling up",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "azsqlconn",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": "ALTER DATABASE lwlpool\nMODIFY (SERVICE_OBJECTIVE = 'DW100c');"
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
+				}
+			},
+			{
+				"name": "Wait for scaling down",
+				"type": "Wait",
+				"dependsOn": [
+					{
+						"activity": "Scale Down",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"waitTimeInSeconds": 360
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2022-10-31T11:10:33Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

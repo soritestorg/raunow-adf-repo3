@@ -1,0 +1,25 @@
+{
+	"name": "pipeline-scale-200-weekend",
+	"properties": {
+		"activities": [
+			{
+				"name": "Set scale to 200",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "scale200",
+					"value": "scale to 200"
+				}
+			}
+		],
+		"variables": {
+			"scale200": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-11-02T10:21:49Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

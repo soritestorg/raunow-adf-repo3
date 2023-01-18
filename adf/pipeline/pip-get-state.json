@@ -1,0 +1,35 @@
+{
+	"name": "pip-get-state",
+	"properties": {
+		"activities": [
+			{
+				"name": "GetPoolState ",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": "https://management.azure.com/subscriptions/16b7a23f-1995-469b-9487-2fbe380f8ffa/resourceGroups/lwl-synapse-test-rg/providers/Microsoft.Sql/servers/lwlsrvtest/databases/lwlpool/?api-version=2021-02-01-preview",
+					"connectVia": {
+						"referenceName": "VN-IR",
+						"type": "IntegrationRuntimeReference"
+					},
+					"method": "GET",
+					"authentication": {
+						"type": "MSI",
+						"resource": "https://management.azure.com"
+					}
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2022-11-03T12:54:39Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

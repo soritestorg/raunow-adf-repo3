@@ -1,0 +1,69 @@
+{
+	"name": "pip-get-pipeline-runs",
+	"properties": {
+		"activities": [
+			{
+				"name": "Retrieve pipeline runs",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": "https://management.azure.com/subscriptions/16b7a23f-1995-469b-9487-2fbe380f8ffa/resourceGroups/lwl-synapse-test-rg/providers/Microsoft.DataFactory/factories/lwl-df-test/queryPipelineRuns?api-version=2018-06-01",
+					"method": "POST",
+					"body": {
+						"lastUpdatedAfter": "1900-01-01T08:48:00Z",
+						"lastUpdatedBefore": "2022-11-28T14:45:00Z",
+						"filters": [
+							{
+								"operand": "Status",
+								"operator": "Equals",
+								"values": [
+									"InProgress"
+								]
+							}
+						]
+					},
+					"authentication": {
+						"type": "MSI",
+						"resource": "https://management.azure.com/"
+					}
+				}
+			},
+			{
+				"name": "Set current_runs",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Retrieve pipeline runs",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "current_runs",
+					"value": {
+						"value": "@string(length(activity('Retrieve pipeline runs').output.value))",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"variables": {
+			"current_runs": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-11-28T14:58:10Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

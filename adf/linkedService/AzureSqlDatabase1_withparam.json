@@ -1,0 +1,21 @@
+{
+	"name": "AzureSqlDatabase1_withparam",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"parameters": {
+			"database_name": {
+				"type": "string",
+				"defaultValue": "master"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"connectionString": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=lwlsrvtest.database.windows.net;Initial Catalog=@{linkedService().database_name}"
+		},
+		"connectVia": {
+			"referenceName": "VN-IR",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

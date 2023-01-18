@@ -1,0 +1,123 @@
+{
+	"name": "pip-check-trigger-runs",
+	"properties": {
+		"activities": [
+			{
+				"name": "QueryTriggerRuns",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "Set 3 hours before",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": "https://management.azure.com/subscriptions/16b7a23f-1995-469b-9487-2fbe380f8ffa/resourceGroups/lwl-synapse-test-rg/providers/Microsoft.DataFactory/factories/lwl-df-test/queryTriggerRuns?api-version=2018-06-01",
+					"method": "POST",
+					"body": {
+						"value": "{  \"lastUpdatedAfter\": \"2022-11-27T08:48:00\",\n   \"lastUpdatedBefore\": \"2022-11-28T14:45:00\",\n   \"filters\": [\n    {\n      \"operand\": \"Status\",\n      \"operator\": \"Equals\",\n      \"values\": [\n        \"Inprogress\"\n      ]\n    }\n  ]\n}\n}",
+						"type": "Expression"
+					},
+					"authentication": {
+						"type": "MSI",
+						"resource": "https://management.azure.com"
+					}
+				}
+			},
+			{
+				"name": "Set current_time",
+				"description": "",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "current_time",
+					"value": {
+						"value": "@utcnow()",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Set 3 hours before",
+				"description": "",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Set current_time",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "time_before",
+					"value": {
+						"value": "@addHours(utcnow(),-3 )",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "QueryTriggerRuns_copy1",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "Set 3 hours before",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": "https://management.azure.com/subscriptions/16b7a23f-1995-469b-9487-2fbe380f8ffa/resourceGroups/lwl-synapse-test-rg/providers/Microsoft.DataFactory/factories/lwl-df-test/queryTriggerRuns?api-version=2018-06-01",
+					"method": "POST",
+					"body": {
+						"value": "@concat('{  \"lastUpdatedAfter\":\"',variables('time_before'),'\",',\n         '\"lastUpdatedBefore\":\"',variables('current_time'),'\"}'     )",
+						"type": "Expression"
+					},
+					"authentication": {
+						"type": "MSI",
+						"resource": "https://management.azure.com"
+					}
+				}
+			}
+		],
+		"variables": {
+			"var_success": {
+				"type": "String"
+			},
+			"current_time": {
+				"type": "String"
+			},
+			"time_before": {
+				"type": "String"
+			},
+			"jsonbuild": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-11-28T13:39:09Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

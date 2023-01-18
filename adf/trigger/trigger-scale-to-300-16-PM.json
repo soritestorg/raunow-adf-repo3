@@ -1,0 +1,37 @@
+{
+	"name": "trigger-scale-to-300-16-PM",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "pipeline-scale-300",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Week",
+				"interval": 1,
+				"startTime": "2022-11-02T08:48:00",
+				"timeZone": "GTB Standard Time",
+				"schedule": {
+					"minutes": [
+						38
+					],
+					"hours": [
+						15
+					],
+					"weekDays": [
+						"Friday",
+						"Monday",
+						"Tuesday"
+					]
+				}
+			}
+		}
+	}
+}

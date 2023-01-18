@@ -1,0 +1,44 @@
+{
+	"name": "pipeline-scale-300",
+	"properties": {
+		"activities": [
+			{
+				"name": "Set scale to 300",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "scale300",
+					"value": "300"
+				}
+			},
+			{
+				"name": "Wait1",
+				"type": "Wait",
+				"dependsOn": [
+					{
+						"activity": "Set scale to 300",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"waitTimeInSeconds": 300
+				}
+			}
+		],
+		"variables": {
+			"myvar2": {
+				"type": "Array"
+			},
+			"scale300": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-11-28T13:35:43Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
