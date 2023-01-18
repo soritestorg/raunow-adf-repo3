@@ -1,0 +1,29 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "lwl-df-test"
+		},
+		"AzureSqlDatabase1_withparam_connectionString": {
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=lwlsrvtest.database.windows.net;Initial Catalog=@{linkedService().database_name}"
+		},
+		"azsqlconn_connectionString": {
+			"value": ""
+		},
+		"ls_az_mi_connectionString": {
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=lwlsrvtest.database.windows.net;Initial Catalog=master"
+		},
+		"AzureSqlDatabase_MPE_properties_privateLinkResourceId": {
+			"value": "/subscriptions/16b7a23f-1995-469b-9487-2fbe380f8ffa/resourceGroups/lwl-synapse-test-rg/providers/Microsoft.Sql/servers/lwlsrvtest"
+		},
+		"AzureSqlDatabase_MPE_properties_groupId": {
+			"value": "sqlServer"
+		},
+		"AzureSqlDatabase_MPE_properties_fqdns": {
+			"value": [
+				"lwlsrvtest.database.windows.net"
+			]
+		}
+	}
+}

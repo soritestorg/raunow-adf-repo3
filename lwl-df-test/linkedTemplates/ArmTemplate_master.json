@@ -1,0 +1,108 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "lwl-df-test"
+		},
+		"AzureSqlDatabase1_withparam_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureSqlDatabase1_withparam'",
+			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=lwlsrvtest.database.windows.net;Initial Catalog=@{linkedService().database_name}"
+		},
+		"azsqlconn_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'azsqlconn'"
+		},
+		"ls_az_mi_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_az_mi'",
+			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=lwlsrvtest.database.windows.net;Initial Catalog=master"
+		},
+		"AzureSqlDatabase_MPE_properties_privateLinkResourceId": {
+			"type": "string",
+			"defaultValue": "/subscriptions/16b7a23f-1995-469b-9487-2fbe380f8ffa/resourceGroups/lwl-synapse-test-rg/providers/Microsoft.Sql/servers/lwlsrvtest"
+		},
+		"AzureSqlDatabase_MPE_properties_groupId": {
+			"type": "string",
+			"defaultValue": "sqlServer"
+		},
+		"AzureSqlDatabase_MPE_properties_fqdns": {
+			"type": "array",
+			"defaultValue": [
+				"lwlsrvtest.database.windows.net"
+			]
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "lwl-df-test_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"AzureSqlDatabase_MPE_properties_privateLinkResourceId": {
+						"value": "[parameters('AzureSqlDatabase_MPE_properties_privateLinkResourceId')]"
+					},
+					"AzureSqlDatabase_MPE_properties_groupId": {
+						"value": "[parameters('AzureSqlDatabase_MPE_properties_groupId')]"
+					},
+					"AzureSqlDatabase_MPE_properties_fqdns": {
+						"value": "[parameters('AzureSqlDatabase_MPE_properties_fqdns')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "lwl-df-test_ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"AzureSqlDatabase1_withparam_connectionString": {
+						"value": "[parameters('AzureSqlDatabase1_withparam_connectionString')]"
+					},
+					"azsqlconn_connectionString": {
+						"value": "[parameters('azsqlconn_connectionString')]"
+					},
+					"ls_az_mi_connectionString": {
+						"value": "[parameters('ls_az_mi_connectionString')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'lwl-df-test_ArmTemplate_0')]"
+			]
+		}
+	]
+}

@@ -1,0 +1,878 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "lwl-df-test"
+		},
+		"AzureSqlDatabase_MPE_properties_privateLinkResourceId": {
+			"type": "string",
+			"defaultValue": "/subscriptions/16b7a23f-1995-469b-9487-2fbe380f8ffa/resourceGroups/lwl-synapse-test-rg/providers/Microsoft.Sql/servers/lwlsrvtest"
+		},
+		"AzureSqlDatabase_MPE_properties_groupId": {
+			"type": "string",
+			"defaultValue": "sqlServer"
+		},
+		"AzureSqlDatabase_MPE_properties_fqdns": {
+			"type": "array",
+			"defaultValue": [
+				"lwlsrvtest.database.windows.net"
+			]
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/cucu')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Wait1",
+						"type": "Wait",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"waitTimeInSeconds": 1
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dummy-pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Wait1",
+						"type": "Wait",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"waitTimeInSeconds": 5
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-01-16T12:08:56Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pip-check-trigger-runs')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "QueryTriggerRuns",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "Set 3 hours before",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"url": "https://management.azure.com/subscriptions/16b7a23f-1995-469b-9487-2fbe380f8ffa/resourceGroups/lwl-synapse-test-rg/providers/Microsoft.DataFactory/factories/lwl-df-test/queryTriggerRuns?api-version=2018-06-01",
+							"method": "POST",
+							"headers": {},
+							"body": {
+								"value": "{  \"lastUpdatedAfter\": \"2022-11-27T08:48:00\",\n   \"lastUpdatedBefore\": \"2022-11-28T14:45:00\",\n   \"filters\": [\n    {\n      \"operand\": \"Status\",\n      \"operator\": \"Equals\",\n      \"values\": [\n        \"Inprogress\"\n      ]\n    }\n  ]\n}\n}",
+								"type": "Expression"
+							},
+							"authentication": {
+								"type": "MSI",
+								"resource": "https://management.azure.com"
+							}
+						}
+					},
+					{
+						"name": "Set current_time",
+						"description": "",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "current_time",
+							"value": {
+								"value": "@utcnow()",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Set 3 hours before",
+						"description": "",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Set current_time",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "time_before",
+							"value": {
+								"value": "@addHours(utcnow(),-3 )",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "QueryTriggerRuns_copy1",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "Set 3 hours before",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"url": "https://management.azure.com/subscriptions/16b7a23f-1995-469b-9487-2fbe380f8ffa/resourceGroups/lwl-synapse-test-rg/providers/Microsoft.DataFactory/factories/lwl-df-test/queryTriggerRuns?api-version=2018-06-01",
+							"method": "POST",
+							"headers": {},
+							"body": {
+								"value": "@concat('{  \"lastUpdatedAfter\":\"',variables('time_before'),'\",',\n         '\"lastUpdatedBefore\":\"',variables('current_time'),'\"}'     )",
+								"type": "Expression"
+							},
+							"authentication": {
+								"type": "MSI",
+								"resource": "https://management.azure.com"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"variables": {
+					"var_success": {
+						"type": "String"
+					},
+					"current_time": {
+						"type": "String"
+					},
+					"time_before": {
+						"type": "String"
+					},
+					"jsonbuild": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2022-11-28T13:39:09Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pip-get-pipeline-runs-withchecks')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Retrieve pipeline runs",
+						"type": "WebActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"url": "https://management.azure.com/subscriptions/16b7a23f-1995-469b-9487-2fbe380f8ffa/resourceGroups/lwl-synapse-test-rg/providers/Microsoft.DataFactory/factories/lwl-df-test/queryPipelineRuns?api-version=2018-06-01",
+							"method": "POST",
+							"headers": {},
+							"body": {
+								"lastUpdatedAfter": "1900-01-01T08:48:00Z",
+								"lastUpdatedBefore": "2022-11-28T14:45:00Z",
+								"filters": [
+									{
+										"operand": "Status",
+										"operator": "Equals",
+										"values": [
+											"InProgress"
+										]
+									}
+								]
+							},
+							"authentication": {
+								"type": "MSI",
+								"resource": "https://management.azure.com/"
+							}
+						}
+					},
+					{
+						"name": "Set current_runs",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Retrieve pipeline runs",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "current_runs",
+							"value": {
+								"value": "@string(length(activity('Retrieve pipeline runs').output.value))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "get_current_time",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "current_time",
+							"value": {
+								"value": "@utcnow()",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"variables": {
+					"current_runs": {
+						"type": "String"
+					},
+					"current_time": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2022-12-27T11:22:35Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pip-get-pipeline-runs')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Retrieve pipeline runs",
+						"type": "WebActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"url": "https://management.azure.com/subscriptions/16b7a23f-1995-469b-9487-2fbe380f8ffa/resourceGroups/lwl-synapse-test-rg/providers/Microsoft.DataFactory/factories/lwl-df-test/queryPipelineRuns?api-version=2018-06-01",
+							"method": "POST",
+							"headers": {},
+							"body": {
+								"lastUpdatedAfter": "1900-01-01T08:48:00Z",
+								"lastUpdatedBefore": "2022-11-28T14:45:00Z",
+								"filters": [
+									{
+										"operand": "Status",
+										"operator": "Equals",
+										"values": [
+											"InProgress"
+										]
+									}
+								]
+							},
+							"authentication": {
+								"type": "MSI",
+								"resource": "https://management.azure.com/"
+							}
+						}
+					},
+					{
+						"name": "Set current_runs",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Retrieve pipeline runs",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "current_runs",
+							"value": {
+								"value": "@string(length(activity('Retrieve pipeline runs').output.value))",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"variables": {
+					"current_runs": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2022-11-28T14:58:10Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pip-test')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Wait1",
+						"type": "Wait",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"waitTimeInSeconds": 3
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-01-18T13:45:31Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline-scale-1000')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Set scale to 1000",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "var1",
+							"value": "scale to 1000"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"variables": {
+					"var1": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2022-11-02T08:30:03Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline-scale-200-weekend')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Set scale to 200",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "scale200",
+							"value": "scale to 200"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"variables": {
+					"scale200": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2022-11-02T10:21:49Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline-scale-300')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Set scale to 300",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "scale300",
+							"value": "300"
+						}
+					},
+					{
+						"name": "Wait1",
+						"type": "Wait",
+						"dependsOn": [
+							{
+								"activity": "Set scale to 300",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"waitTimeInSeconds": 300
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"variables": {
+					"myvar2": {
+						"type": "Array"
+					},
+					"scale300": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2022-11-28T13:35:43Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline-scale-500')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Set scale to 500",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "var500",
+							"value": "scale to 500"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"variables": {
+					"var500": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2022-11-02T09:32:25Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/test-new-pip')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "wait 10",
+						"type": "Wait",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"waitTimeInSeconds": 10
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-01-16T11:36:37Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/default')]",
+			"type": "Microsoft.DataFactory/factories/managedVirtualNetworks",
+			"apiVersion": "2018-06-01",
+			"properties": {},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/trigger-scale-to-1000-02-AM')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "pipeline-scale-1000",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Week",
+						"interval": 1,
+						"startTime": "2022-11-02T08:30:00Z",
+						"timeZone": "UTC",
+						"schedule": {
+							"minutes": [
+								0
+							],
+							"hours": [
+								2
+							],
+							"weekDays": [
+								"Monday",
+								"Tuesday",
+								"Wednesday",
+								"Thursday",
+								"Friday"
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pipeline-scale-1000')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/trigger-scale-to-1000-12-PM')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "pipeline-scale-1000",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Week",
+						"interval": 1,
+						"startTime": "2022-11-02T08:35:00Z",
+						"timeZone": "UTC",
+						"schedule": {
+							"minutes": [
+								0
+							],
+							"hours": [
+								12
+							],
+							"weekDays": [
+								"Monday",
+								"Tuesday",
+								"Wednesday",
+								"Thursday",
+								"Friday"
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pipeline-scale-1000')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/trigger-scale-to-200-weekend')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "pipeline-scale-200-weekend",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Week",
+						"interval": 1,
+						"startTime": "2022-11-02T10:21:00Z",
+						"timeZone": "UTC",
+						"schedule": {
+							"minutes": [
+								0
+							],
+							"hours": [
+								0
+							],
+							"weekDays": [
+								"Saturday"
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pipeline-scale-200-weekend')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/trigger-scale-to-300-16-PM')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "pipeline-scale-300",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Week",
+						"interval": 1,
+						"startTime": "2022-11-02T08:48:00",
+						"timeZone": "GTB Standard Time",
+						"schedule": {
+							"minutes": [
+								38
+							],
+							"hours": [
+								15
+							],
+							"weekDays": [
+								"Friday",
+								"Monday",
+								"Tuesday"
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pipeline-scale-300')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/trigger-scale-to-300-20-PM')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "pipeline-scale-300",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Week",
+						"interval": 1,
+						"startTime": "2022-11-02T09:01:00Z",
+						"timeZone": "UTC",
+						"schedule": {
+							"minutes": [
+								0
+							],
+							"hours": [
+								20
+							],
+							"weekDays": [
+								"Monday",
+								"Tuesday",
+								"Wednesday",
+								"Thursday",
+								"Friday"
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pipeline-scale-300')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/trigger-scale-to-500-09-AM')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "pipeline-scale-500",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Week",
+						"interval": 1,
+						"startTime": "2022-11-02T09:31:00Z",
+						"timeZone": "UTC",
+						"schedule": {
+							"weekDays": [
+								"Monday",
+								"Tuesday",
+								"Wednesday",
+								"Thursday",
+								"Friday"
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pipeline-scale-500')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VN-IR')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "Managed",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "West Europe",
+						"dataFlowProperties": {
+							"computeType": "General",
+							"coreCount": 8,
+							"timeToLive": 10,
+							"cleanup": false
+						},
+						"pipelineExternalComputeScaleProperties": {
+							"timeToLive": 60
+						}
+					}
+				},
+				"managedVirtualNetwork": {
+					"type": "ManagedVirtualNetworkReference",
+					"referenceName": "default"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/managedVirtualNetworks/default')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/default/AzureSqlDatabase_MPE')]",
+			"type": "Microsoft.DataFactory/factories/managedVirtualNetworks/managedPrivateEndpoints",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"privateLinkResourceId": "[parameters('AzureSqlDatabase_MPE_properties_privateLinkResourceId')]",
+				"groupId": "[parameters('AzureSqlDatabase_MPE_properties_groupId')]",
+				"fqdns": "[parameters('AzureSqlDatabase_MPE_properties_fqdns')]"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/managedVirtualNetworks/default')]"
+			]
+		}
+	]
+}

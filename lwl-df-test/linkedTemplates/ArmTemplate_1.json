@@ -1,0 +1,466 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "lwl-df-test"
+		},
+		"AzureSqlDatabase1_withparam_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureSqlDatabase1_withparam'",
+			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=lwlsrvtest.database.windows.net;Initial Catalog=@{linkedService().database_name}"
+		},
+		"azsqlconn_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'azsqlconn'"
+		},
+		"ls_az_mi_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_az_mi'",
+			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=lwlsrvtest.database.windows.net;Initial Catalog=master"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/pip-get-state')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "GetPoolState ",
+						"type": "WebActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"url": "https://management.azure.com/subscriptions/16b7a23f-1995-469b-9487-2fbe380f8ffa/resourceGroups/lwl-synapse-test-rg/providers/Microsoft.Sql/servers/lwlsrvtest/databases/lwlpool/?api-version=2021-02-01-preview",
+							"connectVia": {
+								"referenceName": "VN-IR",
+								"type": "IntegrationRuntimeReference"
+							},
+							"method": "GET",
+							"headers": {},
+							"authentication": {
+								"type": "MSI",
+								"resource": "https://management.azure.com"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2022-11-03T12:54:39Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline-check-pool-state')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "GetStatePool",
+						"type": "WebActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"url": {
+								"value": "@concat('https://management.azure.com/subscriptions/',variables('subscriptionId'),'/resourceGroups/',variables('resourceGroupName'),'/providers/Microsoft.Sql/servers/',variables('serverName'),'/databases/',variables('databaseName'),'?api-version=2021-02-01-preview')",
+								"type": "Expression"
+							},
+							"connectVia": {
+								"referenceName": "VN-IR",
+								"type": "IntegrationRuntimeReference"
+							},
+							"method": "GET",
+							"headers": {},
+							"authentication": {
+								"type": "MSI",
+								"resource": "https://management.azure.com"
+							}
+						}
+					},
+					{
+						"name": "CheckIfPaused",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "GetStatePool",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@equals(activity('GetStatePool').output.properties.status,'Paused' )",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "Restart",
+									"type": "WebActivity",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"url": {
+											"value": "@concat('https://management.azure.com/subscriptions/',variables('subscriptionId'),'/resourceGroups/',variables('resourceGroupName'),'/providers/Microsoft.Sql/servers/',variables('serverName'),'/databases/',variables('databaseName'),'/resume?api-version=2021-02-01-preview')",
+											"type": "Expression"
+										},
+										"connectVia": {
+											"referenceName": "VN-IR",
+											"type": "IntegrationRuntimeReference"
+										},
+										"method": "POST",
+										"headers": {},
+										"body": {
+											"value": "@json('{}')",
+											"type": "Expression"
+										},
+										"authentication": {
+											"type": "MSI",
+											"resource": "https://management.azure.com"
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"variables": {
+					"subscriptionId": {
+						"type": "String",
+						"defaultValue": "16b7a23f-1995-469b-9487-2fbe380f8ffa"
+					},
+					"resourceGroupName": {
+						"type": "String",
+						"defaultValue": "lwl-synapse-test-rg"
+					},
+					"serverName": {
+						"type": "String",
+						"defaultValue": "lwlsrvtest"
+					},
+					"databaseName": {
+						"type": "String",
+						"defaultValue": "lwlpool"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2022-11-03T11:06:08Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlDatabase1_withparam')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"database_name": {
+						"type": "string",
+						"defaultValue": "master"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('AzureSqlDatabase1_withparam_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "VN-IR",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/azsqlconn')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('azsqlconn_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "VN-IR",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_az_mi')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('ls_az_mi_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "VN-IR",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline-mi-scaling')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Scale Up",
+						"type": "Script",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "ls_az_mi",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "NonQuery",
+									"text": "ALTER DATABASE lwlpool\nMODIFY (SERVICE_OBJECTIVE = 'DW200c');"
+								}
+							],
+							"scriptBlockExecutionTimeout": "02:00:00"
+						}
+					},
+					{
+						"name": "Wait for Scaling",
+						"type": "Wait",
+						"dependsOn": [
+							{
+								"activity": "Scale Up",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"waitTimeInSeconds": 360
+						}
+					},
+					{
+						"name": "Scale Down",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "Wait for Scaling",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "ls_az_mi",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "NonQuery",
+									"text": "ALTER DATABASE lwlpool\nMODIFY (SERVICE_OBJECTIVE = 'DW100c');"
+								}
+							],
+							"scriptBlockExecutionTimeout": "02:00:00"
+						}
+					},
+					{
+						"name": "Wait for Scaling Down",
+						"type": "Wait",
+						"dependsOn": [
+							{
+								"activity": "Scale Down",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"waitTimeInSeconds": 300
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2022-10-31T14:04:39Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_az_mi')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline-test-scaling')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Scale Up",
+						"description": "Scaling up sql pool to DW200c.",
+						"type": "Script",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "azsqlconn",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "NonQuery",
+									"text": "ALTER DATABASE lwlpool\nMODIFY (SERVICE_OBJECTIVE = 'DW200c');"
+								}
+							],
+							"scriptBlockExecutionTimeout": "02:00:00"
+						}
+					},
+					{
+						"name": "Wait for scaling up",
+						"type": "Wait",
+						"dependsOn": [
+							{
+								"activity": "Scale Up",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"waitTimeInSeconds": 360
+						}
+					},
+					{
+						"name": "Scale Down",
+						"description": "Scaling down sql pool to DW100c.",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "Wait for scaling up",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "azsqlconn",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "NonQuery",
+									"text": "ALTER DATABASE lwlpool\nMODIFY (SERVICE_OBJECTIVE = 'DW100c');"
+								}
+							],
+							"scriptBlockExecutionTimeout": "02:00:00"
+						}
+					},
+					{
+						"name": "Wait for scaling down",
+						"type": "Wait",
+						"dependsOn": [
+							{
+								"activity": "Scale Down",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"waitTimeInSeconds": 360
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2022-10-31T11:10:33Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/azsqlconn')]"
+			]
+		}
+	]
+}
