@@ -62,6 +62,9 @@
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
 					},
+					"AzureSqlDatabase1_withparam_connectionString": {
+						"value": "[parameters('AzureSqlDatabase1_withparam_connectionString')]"
+					},
 					"AzureSqlDatabase_MPE_properties_privateLinkResourceId": {
 						"value": "[parameters('AzureSqlDatabase_MPE_properties_privateLinkResourceId')]"
 					},
@@ -88,9 +91,6 @@
 				"parameters": {
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
-					},
-					"AzureSqlDatabase1_withparam_connectionString": {
-						"value": "[parameters('AzureSqlDatabase1_withparam_connectionString')]"
 					},
 					"azsqlconn_connectionString": {
 						"value": "[parameters('azsqlconn_connectionString')]"

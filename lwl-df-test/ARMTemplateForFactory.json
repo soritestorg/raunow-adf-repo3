@@ -384,31 +384,6 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/pip-test')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Wait1",
-						"type": "Wait",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"waitTimeInSeconds": 3
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
-				},
-				"annotations": [],
-				"lastPublishTime": "2023-01-18T13:45:31Z"
-			},
-			"dependsOn": []
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/pipeline-check-pool-state')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -891,18 +866,18 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/test-new-pip')]",
+			"name": "[concat(parameters('factoryName'), '/sorana-pip')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "wait 10",
+						"name": "Wait1",
 						"type": "Wait",
 						"dependsOn": [],
 						"userProperties": [],
 						"typeProperties": {
-							"waitTimeInSeconds": 10
+							"waitTimeInSeconds": 1
 						}
 					}
 				],
@@ -910,8 +885,7 @@
 					"elapsedTimeMetric": {},
 					"cancelAfter": {}
 				},
-				"annotations": [],
-				"lastPublishTime": "2023-01-16T11:36:37Z"
+				"annotations": []
 			},
 			"dependsOn": []
 		},

@@ -7,6 +7,11 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "lwl-df-test"
 		},
+		"AzureSqlDatabase1_withparam_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureSqlDatabase1_withparam'",
+			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=lwlsrvtest.database.windows.net;Initial Catalog=@{linkedService().database_name}"
+		},
 		"AzureSqlDatabase_MPE_properties_privateLinkResourceId": {
 			"type": "string",
 			"defaultValue": "/subscriptions/16b7a23f-1995-469b-9487-2fbe380f8ffa/resourceGroups/lwl-synapse-test-rg/providers/Microsoft.Sql/servers/lwlsrvtest"
@@ -326,31 +331,6 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/pip-test')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Wait1",
-						"type": "Wait",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"waitTimeInSeconds": 3
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
-				},
-				"annotations": [],
-				"lastPublishTime": "2023-01-18T13:45:31Z"
-			},
-			"dependsOn": []
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/pipeline-scale-1000')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -494,18 +474,18 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/test-new-pip')]",
+			"name": "[concat(parameters('factoryName'), '/sorana-pip')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "wait 10",
+						"name": "Wait1",
 						"type": "Wait",
 						"dependsOn": [],
 						"userProperties": [],
 						"typeProperties": {
-							"waitTimeInSeconds": 10
+							"waitTimeInSeconds": 1
 						}
 					}
 				],
@@ -513,8 +493,7 @@
 					"elapsedTimeMetric": {},
 					"cancelAfter": {}
 				},
-				"annotations": [],
-				"lastPublishTime": "2023-01-16T11:36:37Z"
+				"annotations": []
 			},
 			"dependsOn": []
 		},
@@ -983,6 +962,31 @@
 				},
 				"annotations": [],
 				"lastPublishTime": "2022-11-03T11:06:08Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/VN-IR')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlDatabase1_withparam')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"database_name": {
+						"type": "string",
+						"defaultValue": "master"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('AzureSqlDatabase1_withparam_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "VN-IR",
+					"type": "IntegrationRuntimeReference"
+				}
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/integrationRuntimes/VN-IR')]"
